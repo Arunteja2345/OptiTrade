@@ -14,11 +14,9 @@ const tradeSchema = new mongoose.Schema({
   status: { type: String, enum: ["Open", "Closed"], default: "Open" },
 });
 
-tradeSchema.virtual("profitPoints").get(function () {
-  const diff =
-    this.buySell === "BUY" ? this.ltp - this.price : this.price - this.ltp;
-  return parseFloat(diff.toFixed(2));
+tradeSchema.virtual('profitPoints').get(function () {
+  if (this.ltp == null || this.price == null) return 0;
+  return this.buySell === 'BUY' ? this.ltp - this.price : this.price - this.ltp;
 });
 
-const Trade = mongoose.model("Trade", tradeSchema);
-export default Trade;
+export default mongoose.model('Trade', tradeSchema);

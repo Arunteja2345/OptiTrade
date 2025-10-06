@@ -149,3 +149,17 @@ export const updateLTPs = async (req, res) => {
     res.status(500).json({ error: "Failed to update LTPs", details: err.message });
   }
 };
+
+export const closeTrade = async (req, res) => {
+  try {
+    const trade = await Trade.findOne({ _id: req.params.id, userId: req.user.userId });
+    if (!trade) return res.status(404).json({ error: 'Trade not found' });
+    if (trade.status === 'closed') return res.status(400).json({ error: 'Trade already closed' });
+    
+    trade.status = 'closed';
+    await trade.save();
+    res.json({ ...trade.toObject({ virtuals: true }), message: 'Trade closed successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
