@@ -154,9 +154,9 @@ export const closeTrade = async (req, res) => {
   try {
     const trade = await Trade.findOne({ _id: req.params.id, userId: req.user.userId });
     if (!trade) return res.status(404).json({ error: 'Trade not found' });
-    if (trade.status === 'closed') return res.status(400).json({ error: 'Trade already closed' });
+    if (trade.status === 'Closed') return res.status(400).json({ error: 'Trade already closed' });
     
-    trade.status = 'closed';
+    trade.status = 'Closed';
     await trade.save();
     res.json({ ...trade.toObject({ virtuals: true }), message: 'Trade closed successfully' });
   } catch (error) {

@@ -21,7 +21,7 @@ export default function TradeForm({ onTradeCreated }) {
   const [error, setError] = useState('');
   const [strikePrices, setStrikePrices] = useState([]);
   const [loading, setLoading] = useState(false);
-
+  const [isExpiryValid, setIsExpiryValid] = useState(false);
   const fetchStrikePrices = useCallback(
     debounce(async (index, expiry) => {
       if (!index || !expiry) {
@@ -133,19 +133,33 @@ export default function TradeForm({ onTradeCreated }) {
       {loading && <p className="text-blue-500">Loading strike prices...</p>}
       <div>
         <label className="block text-sm font-medium">Expiry</label>
-        <DatePicker
-          selected={formData.expiry ? new Date(formData.expiry) : null}
-          onChange={(date) =>
-            setFormData({
-              ...formData,
-              expiry: date ? date.toISOString().split('T')[0] : '',
-            })
-          }
-          dateFormat="yyyy-MM-dd"
-          placeholderText="Select expiry date"
-          className="w-full p-2 border rounded-md"
-          required
+        <DatePicker selected={
+          formData.expiry ? new Date(formData.expiry) : null}
+          onChange={(date) => {
+            if (!date) {
+              setFormData({ ...formData, expiry: '' });
+              setError('Please select a valid expiry date');
+              setIsExpiryValid(false);
+              return;
+            }
+            const formattedDate = date.toISOString().split('T')[0];
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const selectedDate = new Date(formattedDate + 'T00:00:00');
+            if (selectedDate < today) {
+              setError('Expiry cannot be in the past. Please select a correct date.');
+              setFormData({ ...formData, expiry: '' });
+              setIsExpiryValid(false);
+              return;
+            } // Optional: you can also validate against allowed option expiry dates here 
+            setFormData({ ...formData, expiry: formattedDate });
+            setError('');
+            setIsExpiryValid(true);
+          }}
+          dateFormat="yyyy-MM-dd" placeholderText="Select expiry date" className="w-full p-2 border rounded-md" required
         />
+
+
       </div>
       <div>
         <label className="block text-sm font-medium">Index</label>
@@ -211,10 +225,11 @@ export default function TradeForm({ onTradeCreated }) {
       <button
         type="submit"
         className="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 disabled:bg-gray-400"
-        disabled={loading || !strikePrices.length}
+        disabled={loading || !strikePrices.length || !isExpiryValid} // disabled if expiry invalid
       >
         Create Trade
       </button>
+
     </form>
   );
 }
